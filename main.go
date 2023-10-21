@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
@@ -22,8 +22,8 @@ func main() {
 func sprintCompletionistData(profile string) string {
     doc, err := htmlquery.LoadURL("https://completionist.me/steam/profile/")
     if err != nil {
-        // todo: print to stderr and exit instead
-        log.Fatalf("Couldn't load completionist profile: %s", err)
+        fmt.Fprintf(os.Stderr, "Couldn't load completionist profile: %s", err)
+        os.Exit(1)
     }
 
     // This xpath is a bit gross, but rather than work on improving it, I'd
@@ -31,8 +31,8 @@ func sprintCompletionistData(profile string) string {
     // instead.
     values, err := htmlquery.QueryAll(doc, "/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/span|/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/a/span")
     if err != nil {
-        // todo: print to stderr and exit instead
-        log.Fatalf("Couldn't find values: %s", err)
+        fmt.Fprintf(os.Stderr, "Couldn't query for values: %s\n", err)
+        os.Exit(1)
     }
 
     // Originally, I tried to get the keys from a similar xpath, but it was
