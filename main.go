@@ -39,6 +39,11 @@ func sprintCompletionistData(profile string) string {
         os.Exit(1)
     }
 
+    if len(values) == 0 {
+        fmt.Fprintf(os.Stderr, "Couldn't find any stats. Check that your user id is valid.")
+        os.Exit(1)
+    }
+
     // Originally, I tried to get the keys from a similar xpath, but it was
     // hard to keep the xpath order consistent with the values. It's also
     // possible to xpath into the "row" if you will (the key:value is a
