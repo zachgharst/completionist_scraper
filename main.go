@@ -9,8 +9,12 @@ import (
 )
 
 func main() {
-    // todo: parse user id from args
-    s := sprintCompletionistData("76561198025094963")
+    if len(os.Args) < 2 {
+        fmt.Printf("usage: %s <steam id>\n", os.Args[0])
+        return
+    }
+
+    s := sprintCompletionistData(os.Args[1])
 
     // Should be a struct and should be marshalled to json. Dump to stdout,
     // because saving to file means that we can't pipe. We could also return
@@ -20,7 +24,7 @@ func main() {
 }
 
 func sprintCompletionistData(profile string) string {
-    doc, err := htmlquery.LoadURL("https://completionist.me/steam/profile/")
+    doc, err := htmlquery.LoadURL("https://completionist.me/steam/profile/" + profile)
     if err != nil {
         fmt.Fprintf(os.Stderr, "Couldn't load completionist profile: %s", err)
         os.Exit(1)
