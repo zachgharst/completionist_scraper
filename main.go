@@ -9,14 +9,20 @@ import (
 )
 
 func main() {
-    // todo parse user id from args
-    printCompletionistData("76561198025094963")
+    // todo: parse user id from args
+    s := sprintCompletionistData("76561198025094963")
+
+    // Should be a struct and should be marshalled to json. Dump to stdout,
+    // because saving to file means that we can't pipe. We could also return
+    // as a string and parameterize on the program args as a file/stdout, but
+    // let's not overengineer right now.
+    fmt.Println(s)
 }
 
-func printCompletionistData(profile string) {
+func sprintCompletionistData(profile string) string {
     doc, err := htmlquery.LoadURL("https://completionist.me/steam/profile/")
     if err != nil {
-        // todo print to stderr and exit instead
+        // todo: print to stderr and exit instead
         log.Fatalf("Couldn't load completionist profile: %s", err)
     }
 
@@ -25,7 +31,7 @@ func printCompletionistData(profile string) {
     // instead.
     values, err := htmlquery.QueryAll(doc, "/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/span|/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/a/span")
     if err != nil {
-        // todo print to stderr and exit instead
+        // todo: print to stderr and exit instead
         log.Fatalf("Couldn't find values: %s", err)
     }
 
@@ -70,11 +76,8 @@ func printCompletionistData(profile string) {
         "Games Restricted",
     }
 
-    // Should be a struct and should be marshalled to json. Dump to stdout,
-    // because saving to file means that we can't pipe. We could also return
-    // as a string and parameterize on the program args as a file/stdout, but
-    // let's not overengineer right now.
-    fmt.Println("{")
+    // todo: should be a struct and should be marshalled to json.
+    str := fmt.Sprintln("{")
     for i := range values {
         val := ""
 
@@ -88,10 +91,12 @@ func printCompletionistData(profile string) {
         val = strings.TrimSpace(val)
 
         if i != len(values) - 1 {
-            fmt.Printf("  \"%s\": \"%s\",\n", keys[i], val)
+            str += fmt.Sprintf("  \"%s\": \"%s\",\n", keys[i], val)
         } else {
-            fmt.Printf("  \"%s\": \"%s\"\n", keys[i], val)
+            str += fmt.Sprintf("  \"%s\": \"%s\"\n", keys[i], val)
         }
     }
-    fmt.Println("}")
+    str += fmt.Sprintln("}")
+
+    return str
 }
