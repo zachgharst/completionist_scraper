@@ -53,6 +53,6 @@ go install github.com/zachgharst/completionist_scraper
 ## Usage
 
 ```bash
-completionist_scraper <steam_id>
+completionist_scraper [--help | −h] [-f output file] <steam id>
 ```
 
