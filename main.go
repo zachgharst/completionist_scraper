@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -13,41 +14,55 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Printf("usage: %s [--help | −h] [-f output file] <steam id>\n", os.Args[0])
+	f := flag.String("f", "", "file to send output to")
+	// n := flag.Bool("n", false, "normalize data by removing commas, %, and other non-numeric characters")
+
+	flag.Usage = func() {
+		w := flag.CommandLine.Output()
+
+		fmt.Fprintf(
+			w,
+			"Scrapes completionist.me for a profile's stats as a json object\nusage: %s <steam id>\n",
+			os.Args[0],
+		)
+
+		flag.PrintDefaults()
+	}
+
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		flag.Usage()
 		return
 	}
 
-	if os.Args[1] == "--help" || os.Args[1] == "-h" {
-		fmt.Printf(
-			"Scrapes completionist.me for a profile's stats as a json object\nusage: %s [--help | −h] [-f output file] <steam id>\n",
-			os.Args[0],
-		)
-	} else if os.Args[1] == "-f" {
-		s := sprintCompletionistData(os.Args[3])
+	n, err := scrapeCompletionistNodes(flag.Arg(0))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	s, err := sprintDataFromNodes(n)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if *f != "" {
 		file, err := os.Create(os.Args[2])
 		if err != nil {
 			log.Fatalln(err)
 		}
 		defer file.Close()
 
-		file.Write([]byte(s))
+		_, err = file.Write([]byte(s))
+		if err != nil {
+			log.Fatalln(err)
+		}
 	} else {
-		// Should be a struct and should be marshalled to json. Dump to stdout,
-		// because saving to file means that we can't pipe. We could also return
-		// as a string and parameterize on the program args as a file/stdout, but
-		// let's not overengineer right now.
-		s := sprintCompletionistData(os.Args[1])
 		fmt.Println(s)
 	}
 }
 
-func sprintCompletionistData(profile string) string {
-	values, err := scrapeCompletionistNodes(profile)
-	if err != nil {
-		log.Fatalf("%s\n", err)
-	}
-
+func sprintDataFromNodes(nodes []*html.Node) (string, error) {
 	// Originally, I tried to get the keys from a similar xpath, but it was
 	// hard to keep the xpath order consistent with the values. It's also
 	// possible to xpath into the "row" if you will (the key:value is a
@@ -90,21 +105,24 @@ func sprintCompletionistData(profile string) string {
 	}
 
 	stats := make(map[string]string)
-	for i := range values {
+	for i := range nodes {
 		val := ""
 
 		// The first value is "Achievements in Owned" which has an extra span within it.
 		if i == 0 {
-			val = values[0].FirstChild.NextSibling.FirstChild.Data
+			val = nodes[0].FirstChild.NextSibling.FirstChild.Data
 		} else {
-			val = values[i].LastChild.Data
+			val = nodes[i].LastChild.Data
 		}
 
 		stats[keys[i]] = strings.TrimSpace(val)
 	}
 
 	str, err := json.MarshalIndent(stats, "", "  ")
-	return string(str)
+	if err != nil {
+		return "", err
+	}
+	return string(str), nil
 }
 
 func scrapeCompletionistNodes(profile string) ([]*html.Node, error) {
@@ -116,19 +134,18 @@ func scrapeCompletionistNodes(profile string) ([]*html.Node, error) {
 	// This xpath is a bit gross, but rather than work on improving it, I'd
 	// rather help implement an API on the website that returns the data
 	// instead.
-	values, err := htmlquery.QueryAll(
-		doc,
-		"/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/span|/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/a/span",
-	)
+    xpath := "/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/span|" 
+    xpath += "/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/a/span"
+	nodes, err := htmlquery.QueryAll(doc, xpath)
 	if err != nil {
 		return nil, errorf("Couldn't query for values: %s\n", err)
 	}
 
-	if len(values) == 0 {
+	if len(nodes) == 0 {
 		return nil, errorf("Couldn't find any stats. Check that your user id is valid.")
 	}
 
-	return values, nil
+	return nodes, nil
 }
 
 func errorf(format string, a ...interface{}) error {
