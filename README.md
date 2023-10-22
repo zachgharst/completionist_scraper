@@ -2,7 +2,7 @@
 
 Scrapes completionist.me for a profile's stats as a json object:
 
-![docs/stats_example.png]
+![The stats box on completionist.me](docs/stats_example.png)
 
 ## Install
 
