@@ -74,7 +74,7 @@ func sprintCompletionistData(profile string) string {
 		"Games Restricted",
 	}
 
-    stats := make(map[string]string)
+	stats := make(map[string]string)
 	for i := range values {
 		val := ""
 
@@ -85,11 +85,11 @@ func sprintCompletionistData(profile string) string {
 			val = values[i].LastChild.Data
 		}
 
-        stats[keys[i]] = strings.TrimSpace(val)
+		stats[keys[i]] = strings.TrimSpace(val)
 	}
 
-    str, err := json.MarshalIndent(stats, "", "  ")
-    return string(str)
+	str, err := json.MarshalIndent(stats, "", "  ")
+	return string(str)
 }
 
 func scrapeCompletionistNodes(profile string) ([]*html.Node, error) {
@@ -114,5 +114,5 @@ func scrapeCompletionistNodes(profile string) ([]*html.Node, error) {
 }
 
 func errorf(format string, a ...interface{}) error {
-    return errors.New(fmt.Sprintf(format, a...))
+	return errors.New(fmt.Sprintf(format, a...))
 }
