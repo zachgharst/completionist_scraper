@@ -18,15 +18,19 @@ func main() {
 		return
 	}
 
-	if os.Args[1] == "-f" {
+	if os.Args[1] == "--help" || os.Args[1] == "-h" {
+		fmt.Printf(
+			"Scrapes completionist.me for a profile's stats as a json object\nusage: %s [--help | −h] [-f output file] <steam id>\n",
+			os.Args[0],
+		)
+	} else if os.Args[1] == "-f" {
 		s := sprintCompletionistData(os.Args[3])
 		file, err := os.Create(os.Args[2])
-		
 		if err != nil {
 			log.Fatalln(err)
 		}
 		defer file.Close()
-		
+
 		file.Write([]byte(s))
 	} else {
 		// Should be a struct and should be marshalled to json. Dump to stdout,
