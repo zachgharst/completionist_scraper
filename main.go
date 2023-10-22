@@ -74,12 +74,11 @@ func sprintCompletionistData(profile string) string {
 		"Games Restricted",
 	}
 
-	// todo: should be a struct and should be marshalled to json.
     stats := make(map[string]string)
 	for i := range values {
 		val := ""
 
-		// The first value is "Achievements" which has an extra span within it.
+		// The first value is "Achievements in Owned" which has an extra span within it.
 		if i == 0 {
 			val = values[0].FirstChild.NextSibling.FirstChild.Data
 		} else {
