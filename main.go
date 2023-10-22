@@ -14,17 +14,28 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Printf("usage: %s <steam id>\n", os.Args[0])
+		fmt.Printf("usage: %s [-f output file] <steam id>\n", os.Args[0])
 		return
 	}
 
-	s := sprintCompletionistData(os.Args[1])
-
-	// Should be a struct and should be marshalled to json. Dump to stdout,
-	// because saving to file means that we can't pipe. We could also return
-	// as a string and parameterize on the program args as a file/stdout, but
-	// let's not overengineer right now.
-	fmt.Println(s)
+	if os.Args[1] == "-f" {
+		s := sprintCompletionistData(os.Args[3])
+		file, err := os.Create(os.Args[2])
+		
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer file.Close()
+		
+		file.Write([]byte(s))
+	} else {
+		// Should be a struct and should be marshalled to json. Dump to stdout,
+		// because saving to file means that we can't pipe. We could also return
+		// as a string and parameterize on the program args as a file/stdout, but
+		// let's not overengineer right now.
+		s := sprintCompletionistData(os.Args[1])
+		fmt.Println(s)
+	}
 }
 
 func sprintCompletionistData(profile string) string {
@@ -101,7 +112,10 @@ func scrapeCompletionistNodes(profile string) ([]*html.Node, error) {
 	// This xpath is a bit gross, but rather than work on improving it, I'd
 	// rather help implement an API on the website that returns the data
 	// instead.
-	values, err := htmlquery.QueryAll(doc, "/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/span|/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/a/span")
+	values, err := htmlquery.QueryAll(
+		doc,
+		"/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/span|/html/body/div[2]/main/div[1]/div/div[2]/div/div[1]/div/div/div/dl/dt/a/span",
+	)
 	if err != nil {
 		return nil, errorf("Couldn't query for values: %s\n", err)
 	}
