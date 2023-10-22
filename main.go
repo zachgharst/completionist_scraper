@@ -14,7 +14,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Printf("usage: %s [-f output file] <steam id>\n", os.Args[0])
+		fmt.Printf("usage: %s [--help | −h] [-f output file] <steam id>\n", os.Args[0])
 		return
 	}
 
